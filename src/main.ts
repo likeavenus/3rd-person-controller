@@ -68,6 +68,8 @@ const characterState = {
   runSpeed: 5,
 };
 
+let actions: { [key: string]: THREE.AnimationAction } = {};
+
 // Загрузка модели
 // В функции загрузки модели замените создание actions:
 loader.load(
@@ -99,11 +101,6 @@ loader.load(
     // Animation Mixer
     mixer = new THREE.AnimationMixer(model);
 
-    // Создаем действия для всех анимаций
-    // gltf.animations.forEach((clip) => {
-    //   actions[clip.name] = mixer.clipAction(clip);
-    //   actions[clip.name].setLoop(THREE.LoopRepeat, Infinity); // Зацикливаем анимации
-    // });
     // В функции загрузки модели, после создания actions добавьте:
     gltf.animations.forEach((clip) => {
       actions[clip.name] = mixer.clipAction(clip);
@@ -145,55 +142,6 @@ loader.load(
     console.error("❌ Ошибка загрузки модели:", error);
   }
 );
-
-// Создание UI для тестирования анимаций
-function createAnimationTester(actions: { [key: string]: THREE.AnimationAction }) {
-  const container = document.createElement("div");
-  container.style.position = "absolute";
-  container.style.top = "10px";
-  container.style.right = "10px";
-  container.style.background = "rgba(0,0,0,0.8)";
-  container.style.color = "white";
-  container.style.padding = "10px";
-  container.style.borderRadius = "5px";
-  container.style.fontFamily = "Arial, sans-serif";
-  container.style.zIndex = "100";
-
-  const title = document.createElement("div");
-  title.textContent = "🎬 Тест анимаций";
-  title.style.fontWeight = "bold";
-  title.style.marginBottom = "10px";
-  container.appendChild(title);
-
-  // Создаем кнопки для каждой анимации
-  Object.keys(actions).forEach((animName) => {
-    const button = document.createElement("button");
-    button.textContent = animName;
-    button.style.display = "block";
-    button.style.width = "100%";
-    button.style.margin = "5px 0";
-    button.style.padding = "8px";
-    button.style.background = "#4CAF50";
-    button.style.color = "white";
-    button.style.border = "none";
-    button.style.borderRadius = "4px";
-    button.style.cursor = "pointer";
-
-    button.addEventListener("click", () => {
-      // Останавливаем текущую анимацию
-      Object.values(actions).forEach((action) => action.stop());
-
-      // Запускаем выбранную анимацию
-      actions[animName].play();
-      currentAnimation = animName;
-      console.log(`🎬 Воспроизводим: ${animName}`);
-    });
-
-    container.appendChild(button);
-  });
-
-  document.body.appendChild(container);
-}
 
 // Для плавности - интерполяция значений камеры
 let targetCameraAngleX = cameraAngleX;
@@ -328,41 +276,7 @@ function updateCharacter(delta: number) {
 }
 // Простая система анимаций
 // Объявите переменную actions в глобальной области
-let actions: { [key: string]: THREE.AnimationAction } = {};
 
-// Обновите функцию updateAnimations
-// function updateAnimations() {
-//   if (!mixer || Object.keys(actions).length === 0) return;
-
-//   const isMoving = characterState.currentSpeed > 0;
-//   const isRunning = characterState.currentSpeed === characterState.runSpeed;
-
-//   let targetAnimation = "idle";
-
-//   if (isMoving) {
-//     if (isRunning) {
-//       targetAnimation = "run";
-//     } else {
-//       targetAnimation = "walk";
-//     }
-//   }
-
-//   // Если анимация уже играет, не переключаем
-//   if (targetAnimation === currentAnimation) return;
-
-//   console.log(`🔄 Смена анимации: ${currentAnimation} -> ${targetAnimation}`);
-
-//   // Плавное переключение анимаций
-//   if (actions[currentAnimation]) {
-//     actions[currentAnimation].fadeOut(0.2);
-//   }
-
-//   if (actions[targetAnimation]) {
-//     actions[targetAnimation].reset().setEffectiveTimeScale(1).setEffectiveWeight(1).fadeIn(0.2).play();
-//   }
-
-//   currentAnimation = targetAnimation;
-// }
 // Добавьте новые переменные в начало файла
 let currentBaseAnimation = "idle"; // Основная анимация (idle, walk, run)
 let isPlayingOneShot = false; // Флаг для одноразовых анимаций
