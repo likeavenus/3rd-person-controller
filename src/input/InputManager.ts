@@ -21,6 +21,7 @@ export class InputManager {
   };
   mouseWheel = 0;
   pointerLocked = false;
+  pointerLockEnabled = true;
   mobileControls = null;
   constructor() {
     this.setupKeyboardListeners();
@@ -32,9 +33,16 @@ export class InputManager {
       this.setupPointerLock();
     }
   }
+  /** Отключить захват указателя (например, на экране карты) и вернуть курсор. */
+  disablePointerLock() {
+    this.pointerLockEnabled = false;
+    if (document.pointerLockElement) {
+      document.exitPointerLock();
+    }
+  }
   setupPointerLock() {
     document.addEventListener("click", () => {
-      if (!this.pointerLocked) {
+      if (this.pointerLockEnabled && !this.pointerLocked) {
         document.body.requestPointerLock();
       }
     });

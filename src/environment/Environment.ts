@@ -4,7 +4,7 @@ export class Environment {
   reflectorFloor;
   gridHelper;
   constructor(e) {
-    const t = new PlaneGeometry(50, 50);
+    const t = new PlaneGeometry(220, 220);
     this.reflectorFloor = new Reflector(t, {
       clipBias: 0.003,
       textureWidth: window.innerWidth * window.devicePixelRatio,
@@ -14,7 +14,7 @@ export class Environment {
     this.reflectorFloor.rotation.x = -Math.PI / 2;
     this.reflectorFloor.position.y = 0;
     e.add(this.reflectorFloor);
-    this.gridHelper = new GridHelper(50, 50, 4491519, 2245802);
+    this.gridHelper = new GridHelper(220, 110, 4491519, 2245802);
     this.gridHelper.position.y = 0.01;
     this.gridHelper.material.opacity = 0.15;
     this.gridHelper.material.transparent = true;

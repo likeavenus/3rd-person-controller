@@ -18,6 +18,7 @@ export class CameraController {
   touchStartX = 0;
   touchStartY = 0;
   isTouching = false;
+  cameraTouchId = null;
   constructor(e, t) {
     this.camera = e;
     this.inputManager = t;
@@ -26,29 +27,62 @@ export class CameraController {
     }
   }
   setupTouchControls() {
-    window.addEventListener("touchstart", e => {
-      if (e.touches.length === 1) {
-        this.isTouching = true;
-        this.touchStartX = e.touches[0].clientX;
-        this.touchStartY = e.touches[0].clientY;
-      }
-    });
-    window.addEventListener("touchmove", e => {
-      if (this.isTouching && e.touches.length === 1) {
-        const t = e.touches[0].clientX - this.touchStartX;
-        const n = e.touches[0].clientY - this.touchStartY;
-        if (this.touchStartX > window.innerWidth / 2) {
-          this.yaw -= t * this.sensitivity;
-          this.pitch -= n * this.sensitivity;
-          this.pitch = Math.max(this.minPitch, Math.min(this.maxPitch, this.pitch));
+    const isUiTouch = target => {
+      const el = target;
+      return !!(el && el.closest && el.closest("#joystick-container, #buttons-container"));
+    };
+
+    window.addEventListener(
+      "touchstart",
+      e => {
+        if (this.isTouching) return;
+        // Берём первый палец, который НЕ на UI — им вращаем камеру.
+        for (let i = 0; i < e.changedTouches.length; i++) {
+          const touch = e.changedTouches[i];
+          if (isUiTouch(touch.target)) continue;
+          this.isTouching = true;
+          this.cameraTouchId = touch.identifier;
+          this.touchStartX = touch.clientX;
+          this.touchStartY = touch.clientY;
+          break;
         }
-        this.touchStartX = e.touches[0].clientX;
-        this.touchStartY = e.touches[0].clientY;
+      },
+      { passive: true }
+    );
+
+    window.addEventListener(
+      "touchmove",
+      e => {
+        if (!this.isTouching) return;
+        const touch = this.findTouch(e.changedTouches, this.cameraTouchId);
+        if (!touch) return;
+        const dx = touch.clientX - this.touchStartX;
+        const dy = touch.clientY - this.touchStartY;
+        this.yaw -= dx * this.sensitivity;
+        this.pitch -= dy * this.sensitivity;
+        this.pitch = Math.max(this.minPitch, Math.min(this.maxPitch, this.pitch));
+        this.touchStartX = touch.clientX;
+        this.touchStartY = touch.clientY;
+      },
+      { passive: true }
+    );
+
+    const release = e => {
+      if (!this.isTouching) return;
+      if (this.findTouch(e.changedTouches, this.cameraTouchId)) {
+        this.isTouching = false;
+        this.cameraTouchId = null;
       }
-    });
-    window.addEventListener("touchend", () => {
-      this.isTouching = false;
-    });
+    };
+    window.addEventListener("touchend", release);
+    window.addEventListener("touchcancel", release);
+  }
+  findTouch(touchList, id) {
+    if (id === null) return null;
+    for (let i = 0; i < touchList.length; i++) {
+      if (touchList[i].identifier === id) return touchList[i];
+    }
+    return null;
   }
   getCamera() {
     return this.camera;

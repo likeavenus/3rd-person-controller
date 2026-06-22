@@ -1,6 +1,7 @@
 import { PerformanceManager } from "../utils/PerformanceManager";
 export class PointerLockPrompt {
   prompt;
+  killed = false;
   constructor() {
     if (!PerformanceManager.isMobile()) {
       this.prompt = document.createElement("div");
@@ -35,6 +36,7 @@ export class PointerLockPrompt {
         this.prompt.classList.add("hidden");
       }, 5000);
       document.addEventListener("pointerlockchange", () => {
+        if (this.killed) return;
         if (document.pointerLockElement !== document.body) {
           this.prompt.classList.remove("hidden");
         } else {
@@ -42,5 +44,9 @@ export class PointerLockPrompt {
         }
       });
     }
+  }
+  destroy() {
+    this.killed = true;
+    if (this.prompt) this.prompt.remove();
   }
 }

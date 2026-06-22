@@ -28,6 +28,12 @@ export class LightingManager {
     e.add(this.fillLight);
     console.log("💡 Профессиональное освещение настроено");
   }
+  setVisible(v) {
+    this.ambientLight.visible = v;
+    this.hemisphereLight.visible = v;
+    this.directionalLight.visible = v;
+    this.fillLight.visible = v;
+  }
   update(e) {
     const t = Math.sin(e * 0.5) * 0.1 + 0.9;
     this.hemisphereLight.intensity = t * 0.4;

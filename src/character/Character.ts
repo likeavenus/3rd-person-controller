@@ -238,11 +238,12 @@ export class Character {
     console.log(`🕳️ Засасывание: радиус ${triggerRadius}, анимация падения`);
   }
 
-  applyBlackHoleStretch(stretch: number, pullDirection: Vector3) {
+  applyBlackHoleStretch(stretch: number, pullDirection: Vector3, shrink = 1) {
     const model = this.getModel();
     if (!model) return;
     model.lookAt(model.position.clone().add(pullDirection));
-    model.scale.set(1, 1 / Math.sqrt(stretch), stretch);
+    const lateral = shrink / Math.sqrt(stretch);
+    model.scale.set(lateral, lateral, stretch * shrink);
   }
   setPosition(e) {
     if (this.model) {
@@ -251,6 +252,22 @@ export class Character {
   }
   setControlLocked(e) {
     this.controlLocked = e;
+  }
+  resetAfterFall() {
+    this.controlLocked = false;
+    this.animationLocked = false;
+    this.isRolling = false;
+    this.velocity.set(0, 0, 0);
+    this.direction.set(0, 0, 0);
+    this.currentSpeed = 0;
+    if (this.model) {
+      this.model.scale.set(1, 1, 1);
+      this.model.rotation.set(0, 0, 0);
+      this.model.visible = true;
+    }
+    if (this.animationManager) {
+      this.animationManager.switchTo("idle", 0.2);
+    }
   }
   unlockAnimation() {
     this.animationLocked = false;

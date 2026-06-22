@@ -20,6 +20,7 @@ export class MobileControls {
     space: false,
     e: false
   };
+  joystickTouchId = null;
   constructor() {
     this.createJoystick();
     this.createButtons();
@@ -135,34 +136,58 @@ export class MobileControls {
     }
   }
   setupTouchListeners() {
-    this.joystickContainer.addEventListener("touchstart", e => {
-      e.preventDefault();
-      this.joystickActive = true;
-      const t = this.joystickContainer.getBoundingClientRect();
-      const n = e.touches[0];
-      this.joystickStartPos = {
-        x: t.left + t.width / 2,
-        y: t.top + t.height / 2
-      };
-      this.updateJoystick(n.clientX, n.clientY);
-    });
-    window.addEventListener("touchmove", e => {
-      if (!this.joystickActive) {
-        return;
-      }
-      const t = e.touches[0];
-      this.updateJoystick(t.clientX, t.clientY);
-    });
-    window.addEventListener("touchend", () => {
-      if (this.joystickActive) {
-        this.joystickActive = false;
-        this.keys.w = false;
-        this.keys.a = false;
-        this.keys.s = false;
-        this.keys.d = false;
-        this.joystickKnob.style.transform = "translate(0, 0)";
-      }
-    });
+    // Джойстик "ловит" конкретный палец (identifier), чтобы второй палец
+    // мог одновременно вращать камеру (мультитач).
+    this.joystickContainer.addEventListener(
+      "touchstart",
+      e => {
+        e.preventDefault();
+        const touch = e.changedTouches[0];
+        if (!touch) return;
+        this.joystickTouchId = touch.identifier;
+        this.joystickActive = true;
+        const rect = this.joystickContainer.getBoundingClientRect();
+        this.joystickStartPos = {
+          x: rect.left + rect.width / 2,
+          y: rect.top + rect.height / 2
+        };
+        this.updateJoystick(touch.clientX, touch.clientY);
+      },
+      { passive: false }
+    );
+
+    window.addEventListener(
+      "touchmove",
+      e => {
+        if (!this.joystickActive) return;
+        const touch = this.findTouch(e.changedTouches, this.joystickTouchId);
+        if (!touch) return;
+        this.updateJoystick(touch.clientX, touch.clientY);
+      },
+      { passive: false }
+    );
+
+    const release = e => {
+      if (!this.joystickActive) return;
+      const touch = this.findTouch(e.changedTouches, this.joystickTouchId);
+      if (!touch) return;
+      this.joystickActive = false;
+      this.joystickTouchId = null;
+      this.keys.w = false;
+      this.keys.a = false;
+      this.keys.s = false;
+      this.keys.d = false;
+      this.joystickKnob.style.transform = "translate(0, 0)";
+    };
+    window.addEventListener("touchend", release);
+    window.addEventListener("touchcancel", release);
+  }
+  findTouch(touchList, id) {
+    if (id === null) return null;
+    for (let i = 0; i < touchList.length; i++) {
+      if (touchList[i].identifier === id) return touchList[i];
+    }
+    return null;
   }
   updateJoystick(e, t) {
     const n = e - this.joystickStartPos.x;
